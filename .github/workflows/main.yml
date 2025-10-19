@@ -19,13 +19,13 @@ jobs:
 
       - name: Step 2 - Download Pinggy CLI
         run: |
-          Invoke-WebRequest -Uri "https://s3.ap-south-1.amazonaws.com/public.pinggy.binaries/cli/v0.2.5/windows/amd64/pinggy.exe"
+          Invoke-WebRequest -Uri "https://s3.ap-south-1.amazonaws.com/public.pinggy.binaries/cli/v0.2.5/windows/amd64/pinggy.exe" -OutFile "$env:GITHUB_WORKSPACE\pinggy.exe"
         shell: powershell
         continue-on-error: true
 
       - name: Step 3 - Run Pinggy
         run: |
-          pinggy.exe -p 443 -R0:127.0.0.1:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 cfOfuF4zA64+force+tcp@ap.free.pinggy.io
+          & "$env:GITHUB_WORKSPACE\pinggy.exe" -p 443 -R0:127.0.0.1:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 cfOfuF4zA64+force+tcp@ap.free.pinggy.io
         shell: powershell
         continue-on-error: true
         timeout-minutes: 350
