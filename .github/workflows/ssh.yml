@@ -8,19 +8,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: chnage root passwd
+      - name: Install sshpass
+        continue-on-error: true
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Change root password
         continue-on-error: true
         run: echo 'root:admin' | sudo chpasswd
-        
-        
 
-      - name: Start SSH
+      - name: Enable root SSH login
+        continue-on-error: true
+        run: |
+          sudo sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo service ssh restart
+          sudo service ssh status
+
+      - name: Start SSH tunnel via Serveo with sshpass
         continue-on-error: true
         timeout-minutes: 350
         run: |
-          ssh -o StrictHostKeyChecking=no \
-          -o UserKnownHostsFile=/dev/null \
-          -R ssh-linux:22:localhost:22 \
-          -R web1:80:localhost:8000 \
-          -R web2:80:localhost:8002 \
-           serveo.net -vvv
+          sshpass -p "admin" ssh -fN -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -R ssh-linux:22:localhost:22 \
+              -R web1:80:localhost:8000 \
+              -R web2:80:localhost:8002 \
+              root@serveo.net -vvv
