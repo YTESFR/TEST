@@ -23,11 +23,11 @@ jobs:
           sudo service ssh restart
           sudo service ssh status
 
-      - name: Start SSH tunnel via Serveo with sshpass
+      - name: Start SSH tunnel via Serveo with sshpass (foreground)
         continue-on-error: true
         timeout-minutes: 350
         run: |
-          sshpass -p "admin" ssh -fN -o StrictHostKeyChecking=no \
+          sshpass -p "admin" ssh -N -o StrictHostKeyChecking=no \
               -o UserKnownHostsFile=/dev/null \
               -R ssh-linux:22:localhost:22 \
               -R web1:80:localhost:8000 \
