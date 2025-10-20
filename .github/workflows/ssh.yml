@@ -1,0 +1,29 @@
+name: Manual CI (Linux)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: chnage root passwd
+        run: echo 'root:admin' | sudo chpasswd
+        
+
+      - name: Start SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+          -o UserKnownHostsFile=/dev/null \
+          -R myssh:22:localhost:22 \
+          -R web1:80:localhost:8000 \
+          -R web2:80:localhost:8002 \
+           serveo.net
+
+
+      - name: Build project
+        run: npm run build
+
+      - name: Show success message
+        run: echo "✅ CI completed successfully on Linux!"
