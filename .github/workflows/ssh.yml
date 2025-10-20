@@ -1,40 +1,67 @@
-name: Manual CI (Linux)
+name: Serveo SSH Tunnel with User and Data Cache (Root, Password Only)
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  serveo:
+    runs-on: namespace-profile-test
 
     steps:
-      - name: Install sshpass
+      # Step 1: Enable Namespace cache for /data (instant persistent cache)
+      - name: Enable /data cache (Namespace Cache Volume)
+        if: always()
         continue-on-error: true
-        run: sudo apt-get update && sudo apt-get install -y sshpass
+        uses: namespacelabs/nscloud-cache-action@v1
+        with:
+          path: |
+            /data
 
-      - name: Change root password
-        continue-on-error: true
-        run: echo 'root:admin' | sudo chpasswd
-
-      - name: Enable root SSH login and password authentication
+      # Step 2: Create 'serveo' user (optional, keep for reference)
+      - name: Create 'serveo' user
+        if: always()
         continue-on-error: true
         run: |
-          # Enable root login
-          sudo sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-          # Enable password authentication
-          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-          # Restart SSH service
-          sudo service ssh restart
-          # Check SSH status
-          sudo service ssh status
+          echo "Creating user 'serveo'..."
+          sudo useradd -m -s /bin/bash serveo || echo "User already exists"
+          echo "serveo:serveo" | sudo chpasswd
+          echo "User 'serveo' created with password 'serveo'."
 
-      - name: Start SSH tunnel via Serveo with sshpass (foreground)
+      # Step 3: Reset root password
+      - name: Reset root password
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "root:serveo" | sudo chpasswd
+          echo "Root password reset complete."
+
+      # Step 4: Enable root login via SSH
+      - name: Allow root login via SSH
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "Enabling root login for SSH..."
+          sudo sed -i.bak -E 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo service ssh restart || true
+          sudo service ssh status || true
+
+      # Step 5: Start SSH service
+      - name: Start SSH service
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "Starting SSH service..."
+          sudo service ssh start || true
+          sudo service ssh status || true
+
+      # Step 6: Start Serveo reverse SSH tunnel as root
+      - name: Start Serveo reverse SSH tunnel
+        if: always()
         continue-on-error: true
         timeout-minutes: 350
         run: |
-          sshpass -p "admin" ssh -N -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
-              -R ssh-linux:22:localhost:22 \
-              -R web1:80:localhost:8000 \
-              -R web2:80:localhost:8002 \
-              root@serveo.net -vvv
+          echo "Starting Serveo reverse SSH tunnel as root with password only..."
+
+          # Run the tunnel as root using password authentication
+          sshpass -p 'serveo' ssh -o StrictHostKeyChecking=no \
+            -R my-root-1208:22:localhost:22 serveo.net -v
