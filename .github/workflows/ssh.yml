@@ -9,21 +9,18 @@ jobs:
 
     steps:
       - name: chnage root passwd
+        continue-on-error: true
         run: echo 'root:admin' | sudo chpasswd
+        
         
 
       - name: Start SSH
+        continue-on-error: true
+        timeout-minutes: 350
         run: |
           ssh -o StrictHostKeyChecking=no \
           -o UserKnownHostsFile=/dev/null \
-          -R myssh:22:localhost:22 \
+          -R ssh-linux:22:localhost:22 \
           -R web1:80:localhost:8000 \
           -R web2:80:localhost:8002 \
-           serveo.net
-
-
-      - name: Build project
-        run: npm run build
-
-      - name: Show success message
-        run: echo "✅ CI completed successfully on Linux!"
+           serveo.net -vvv
