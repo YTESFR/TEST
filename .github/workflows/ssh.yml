@@ -16,11 +16,16 @@ jobs:
         continue-on-error: true
         run: echo 'root:admin' | sudo chpasswd
 
-      - name: Enable root SSH login
+      - name: Enable root SSH login and password authentication
         continue-on-error: true
         run: |
+          # Enable root login
           sudo sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+          # Enable password authentication
+          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          # Restart SSH service
           sudo service ssh restart
+          # Check SSH status
           sudo service ssh status
 
       - name: Start SSH tunnel via Serveo with sshpass (foreground)
