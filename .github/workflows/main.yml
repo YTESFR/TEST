@@ -1,6 +1,6 @@
 name: Sandbox Windows Pipeline
 
-on:
+on: 
   push:
     branches:
       - main
